@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Zig Roulette
+Comment=European roulette casino game built with Zig, GTK4, and libadwaita
+Exec=zig-roulette
+Icon=dev.instazdll.ZigRoulette
+Terminal=false
+Categories=Game;GTK;
+StartupNotify=true
