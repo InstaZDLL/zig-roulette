@@ -1,10 +1,25 @@
-# Zig Roulette
-
 <p align="center">
-  <img src="assets/logo.svg" alt="Zig Roulette logo" width="220">
+  <img src="assets/logo.svg" width="128" height="128" alt="Zig Roulette Icon">
 </p>
 
-Zig Roulette is a native GTK4/libadwaita desktop roulette game written in Zig. It implements a European roulette table with a drawn wheel, clickable betting areas, session balance, active bets, result history, and unit-tested payout logic.
+<h1 align="center">Zig Roulette</h1>
+
+<p align="center">
+  <strong>European Roulette Desktop Game</strong><br>
+  <em>Play a native GTK4/libadwaita roulette table with clickable bets, animated spins, and local session credits.</em><br>
+  <sub>A small personal project built for fun and learning.</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/InstaZDLL/zig-roulette/releases"><img src="https://img.shields.io/github/v/release/InstaZDLL/zig-roulette?style=flat-square&color=F7A41D&label=Release" alt="Release"></a>
+  <img src="https://img.shields.io/badge/Language-Zig-F7A41D?style=flat-square&logo=zig&logoColor=black" alt="Zig">
+  <img src="https://img.shields.io/badge/Toolkit-GTK4-4A90D9?style=flat-square&logo=gnome&logoColor=white" alt="GTK4">
+  <img src="https://img.shields.io/badge/Library-libadwaita-4A90D9?style=flat-square&logo=gnome&logoColor=white" alt="libadwaita">
+  <img src="https://img.shields.io/badge/Drawing-Cairo-CB1F26?style=flat-square" alt="Cairo">
+  <img src="https://img.shields.io/badge/Build-zig%20build-F7A41D?style=flat-square&logo=zig&logoColor=black" alt="zig build">
+  <a href="https://github.com/InstaZDLL/zig-roulette/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-EUPL--1.2-blue?style=flat-square" alt="License"></a>
+  <img src="https://img.shields.io/badge/Platform-Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
+</p>
 
 ## Table of Contents
 
