@@ -1,227 +1,95 @@
 <p align="center">
-  <img src="assets/logo.svg" width="128" height="128" alt="Zig Roulette Icon">
+  <img src="assets/og-image.jpeg" alt="Zig Roulette" width="640">
 </p>
 
-<h1 align="center">Zig Roulette</h1>
+<h1 align="center">🎰 Zig Roulette</h1>
 
 <p align="center">
-  <strong>European Roulette Desktop Game</strong><br>
-  <em>Play a native GTK4/libadwaita roulette table with clickable bets, animated spins, and local session credits.</em><br>
-  <sub>A small personal project built for fun and learning.</sub>
+  <strong>The Casino of Code.</strong> A native European roulette table for your Linux desktop —<br>
+  click your chips, spin the wheel, watch the credits fly. Winning is a matter of safety, not luck.
 </p>
 
 <p align="center">
   <a href="https://github.com/InstaZDLL/zig-roulette/releases"><img src="https://img.shields.io/github/v/release/InstaZDLL/zig-roulette?style=flat-square&color=F7A41D&label=Release" alt="Release"></a>
-  <img src="https://img.shields.io/badge/Language-Zig-F7A41D?style=flat-square&logo=zig&logoColor=black" alt="Zig">
-  <img src="https://img.shields.io/badge/Toolkit-GTK4-4A90D9?style=flat-square&logo=gnome&logoColor=white" alt="GTK4">
-  <img src="https://img.shields.io/badge/Library-libadwaita-4A90D9?style=flat-square&logo=gnome&logoColor=white" alt="libadwaita">
-  <img src="https://img.shields.io/badge/Drawing-Cairo-CB1F26?style=flat-square" alt="Cairo">
-  <img src="https://img.shields.io/badge/Build-zig%20build-F7A41D?style=flat-square&logo=zig&logoColor=black" alt="zig build">
-  <a href="https://github.com/InstaZDLL/zig-roulette/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-EUPL--1.2-blue?style=flat-square" alt="License"></a>
+  <img src="https://img.shields.io/badge/Zig-0.16.0-F7A41D?style=flat-square&logo=zig&logoColor=black" alt="Zig">
+  <img src="https://img.shields.io/badge/GTK4-libadwaita-4A90D9?style=flat-square&logo=gnome&logoColor=white" alt="GTK4">
   <img src="https://img.shields.io/badge/Platform-Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
+  <a href="https://github.com/InstaZDLL/zig-roulette/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-EUPL--1.2-blue?style=flat-square" alt="License"></a>
 </p>
 
-## Table of Contents
+---
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Commands](#commands)
-- [Testing](#testing)
-- [Static Analysis](#static-analysis)
-- [Desktop Metadata](#desktop-metadata)
-- [License](#license)
-
-## Overview
-
-The app is a small native casino game for Linux desktops. The UI uses GTK4/libadwaita, while the roulette rules live in a separate Zig module so payout behavior can be tested without launching the GUI.
-
-Supported roulette bets:
-
-- Straight number: `0-36`
-- Color: red or black
-- Parity: even or odd
-- Range: `1-18`, `19-36`
-- Dozens: `1-12`, `13-24`, `25-36`
-- Columns: `COL 1`, `COL 2`, `COL 3`
-
-## Features
-
-- European roulette wheel drawn with Cairo
-- Clickable betting table
-- Direct bet placement from table clicks
-- Session balance starting at `1000` credits
-- Active bet list with structured rows
-- Color-coded result history
-- Last-bet undo button
-- Max amount button
-- Full new-session reset
-- Dark casino-style GTK theme
-- SVG logo, rendered PNG icon variants, Linux `.desktop` launcher, and AppStream metadata
-- Unit tests for core game rules
-
-## Tech Stack
-
-- Zig `0.16.0`
-- GTK4
-- libadwaita
-- GLib/GObject
-- Cairo drawing through GTK
-
-## Prerequisites
-
-Install Zig and the GTK development packages.
-
-Fedora:
+## 🎲 Play in 30 seconds
 
 ```bash
+# Fedora
 sudo dnf install zig gtk4-devel libadwaita-devel pkgconf-pkg-config
-```
-
-Ubuntu/Debian:
-
-```bash
+# Debian/Ubuntu
 sudo apt install zig libgtk-4-dev libadwaita-1-dev pkg-config
-```
 
-The project was validated locally with:
-
-- Zig `0.16.0`
-- GTK `4.22.4`
-- libadwaita `1.9.1`
-
-## Installation
-
-Build the project:
-
-```bash
-zig build
-```
-
-Install to the default Zig prefix:
-
-```bash
-zig build install
-```
-
-Install to a custom prefix:
-
-```bash
-zig build install --prefix ~/.local
-```
-
-This installs:
-
-- `bin/zig-roulette`
-- `share/applications/dev.instazdll.ZigRoulette.desktop`
-- `share/metainfo/dev.instazdll.ZigRoulette.metainfo.xml`
-- `share/icons/hicolor/scalable/apps/dev.instazdll.ZigRoulette.svg`
-- `share/icons/hicolor/<size>x<size>/apps/dev.instazdll.ZigRoulette.png` for `16`, `32`, `48`, `64`, `128`, `256`, and `512`
-
-## Usage
-
-Run from the source tree:
-
-```bash
 zig build run
 ```
 
-After installation:
+You start with **1000 credits**. Pick an amount, click a zone on the table to drop a bet,
+hit **Lancer**, and pray to the RNG gods. The wheel spins in real Cairo, the ball lands,
+the history panel keeps the receipts. 🧾
 
-```bash
-zig-roulette
-```
+## ✨ What you get
 
-Gameplay flow:
+- 🎡 A real European wheel, hand-drawn with Cairo and spun with eased animation
+- 🖱️ Click-to-bet table — straights, colors, parity, ranges, dozens, columns
+- 💰 Live session balance, active-bet list, and a color-coded win/loss history
+- ↩️ One-click **Max**, **undo last bet**, and **new session** controls
+- 🌑 A moody dark casino theme, SVG logo, desktop launcher & AppStream metadata
+- ✅ Pure, tested game logic that runs without ever opening a window
 
-1. Choose a bet amount.
-2. Use `Max` if you want to bet the available balance.
-3. Click a zone on the roulette table to add that bet.
-4. Add more bets, repeat the selected bet, or undo the last bet if needed.
-5. Press `Lancer`.
-6. Read the result, updated balance, and history in the right panel.
+## 🎯 Bets on the table
 
-## Project Structure
+| Bet | Options | Pays |
+|---|---|---|
+| Straight | any number `0–36` | 35:1 |
+| Color | 🔴 Rouge / ⚫ Noir | 1:1 |
+| Parity | Pair / Impair | 1:1 |
+| Range | `1–18` / `19–36` | 1:1 |
+| Dozen | `1–12` / `13–24` / `25–36` | 2:1 |
+| Column | COL 1 / COL 2 / COL 3 | 2:1 |
+
+> `0` is the house's friend: it sinks every even-money and group bet. 🟢
+
+## 🧱 Under the hood
+
+The code is split into small, single-purpose modules with a clean dependency graph
+(`main → ui → render → app → gtk`, plus `wheel` and `game` as shared leaves):
 
 ```text
-.
-├── assets/
-│   ├── icons/
-│   └── logo.svg
-├── data/
-│   ├── dev.instazdll.ZigRoulette.desktop
-│   └── dev.instazdll.ZigRoulette.metainfo.xml
-├── src/
-│   ├── game.zig
-│   └── main.zig
-├── build.zig
-├── build.zig.zon
-└── README.md
+src/
+├── game.zig     # pure roulette rules + payouts (GUI-free, fully unit-tested)
+├── gtk.zig      # hand-written GTK4/libadwaita/Cairo/GLib bindings
+├── wheel.zig    # wheel geometry + spin easing (pure math)
+├── app.zig      # the shared AppState and its types
+├── render.zig   # Cairo draw funcs for the wheel & table
+├── ui.zig       # widgets, callbacks, animation, refresh
+├── main.zig     # tiny entry point
+└── style.css    # the theme, loaded via @embedFile
 ```
 
-## Commands
+The golden rule: **game rules never touch GTK**, so you can test payout math without a display server.
+
+## 🛠️ Dev commands
 
 ```bash
-zig build        # Compile the application
-zig build run    # Run the GTK app
-zig build test   # Run unit tests for roulette logic
+zig build              # compile
+zig build run          # build & play
+zig build test         # run the game-logic unit tests
 zig fmt src/*.zig build.zig
-./scripts/opengrep.sh   # Static analysis (SAST)
+./scripts/opengrep.sh  # static analysis (SAST) — add --sarif to emit a report
 ```
 
-## Testing
+Want it installed system-wide? `zig build install --prefix ~/.local` drops the binary,
+`.desktop` launcher, icons, and AppStream metadata under the `dev.instazdll.ZigRoulette` app id.
 
-The tests cover core roulette behavior in `src/game.zig`:
+## 📜 License
 
-- Straight number payout
-- Zero losing color/parity bets
-- Dozen and column payouts
-- Invalid and over-balance bets
-- Undoing the last active bet
-- Balance reset behavior
+Licensed under the **European Union Public Licence v1.2**. See [LICENSE](LICENSE).
 
-Run them with:
-
-```bash
-zig build test
-```
-
-## Static Analysis
-
-Static analysis (SAST) runs with [Opengrep](https://opengrep.dev), locally and in CI
-(`.github/workflows/opengrep.yml`, which publishes results to GitHub Code Scanning).
-
-```bash
-./scripts/opengrep.sh           # human-readable scan
-./scripts/opengrep.sh --sarif   # also write opengrep.sarif
-```
-
-The scan combines the Opengrep registry (`--config auto`, no token required) with the
-project rules in `.opengrep/rules/`. Zig has no native Opengrep parser, so `.zig` files
-are checked with the language-agnostic `generic` engine; add your own rules to
-`.opengrep/rules/zig-generic.yml`.
-
-Install Opengrep with:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
-```
-
-## Desktop Metadata
-
-The project includes:
-
-- `assets/logo.svg`
-- `assets/icons/logo-*.png`
-- `data/dev.instazdll.ZigRoulette.desktop`
-- `data/dev.instazdll.ZigRoulette.metainfo.xml`
-
-The build installs the desktop launcher, AppStream metadata, SVG icon, and PNG icon variants using the app id `dev.instazdll.ZigRoulette`, so desktop menus can resolve the application after installation.
-
-## License
-
-Licensed under the European Union Public Licence v1.2. See [LICENSE](LICENSE).
+<p align="center"><sub>A small personal project, built for fun and for learning Zig. 🦎</sub></p>
