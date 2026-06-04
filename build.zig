@@ -16,6 +16,9 @@ pub fn build(b: *std.Build) void {
     exe.root_module.link_libc = true;
     exe.root_module.linkSystemLibrary("gtk4", .{ .use_pkg_config = .yes });
     exe.root_module.linkSystemLibrary("libadwaita-1", .{ .use_pkg_config = .yes });
+    exe.root_module.addAnonymousImport("og-image", .{
+        .root_source_file = b.path("assets/og-image.jpeg"),
+    });
 
     b.installArtifact(exe);
     b.installFile("assets/logo.svg", "share/icons/hicolor/scalable/apps/dev.instazdll.ZigRoulette.svg");

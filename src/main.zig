@@ -17,6 +17,7 @@ const gtk = struct {
     pub const G_LOG_WRITER_HANDLED: c_int = 1;
     pub const GTK_ALIGN_START: c_int = 1;
     pub const GTK_ALIGN_END: c_int = 2;
+    pub const GTK_ALIGN_CENTER: c_int = 3;
     pub const GTK_ORIENTATION_HORIZONTAL: c_int = 0;
     pub const GTK_ORIENTATION_VERTICAL: c_int = 1;
     pub const CAIRO_FONT_SLANT_NORMAL: c_int = 0;
@@ -39,9 +40,15 @@ const gtk = struct {
     pub const GtkSpinButton = opaque {};
     pub const GtkButton = opaque {};
     pub const GtkListBox = opaque {};
+    pub const GtkImage = opaque {};
+    pub const GtkPicture = opaque {};
     pub const GtkCssProvider = opaque {};
     pub const GtkStyleProvider = opaque {};
+    pub const GBytes = opaque {};
+    pub const GError = opaque {};
     pub const GdkDisplay = opaque {};
+    pub const GdkPaintable = opaque {};
+    pub const GdkTexture = opaque {};
     pub const cairo_t = opaque {};
 
     pub const cairo_text_extents_t = extern struct {
@@ -70,6 +77,8 @@ const gtk = struct {
     pub extern fn g_log_set_writer_func(func: *const anyopaque, user_data: ?*anyopaque, user_data_free: ?*const anyopaque) void;
     pub extern fn g_signal_connect_data(instance: *anyopaque, detailed_signal: [*:0]const u8, c_handler: *const anyopaque, data: ?*anyopaque, destroy_data: ?*const anyopaque, connect_flags: c_int) gulong;
     pub extern fn g_timeout_add(interval: guint, function: *const anyopaque, data: ?*anyopaque) guint;
+    pub extern fn g_bytes_new_static(data: *const anyopaque, size: usize) *GBytes;
+    pub extern fn g_bytes_unref(bytes: *GBytes) void;
 
     pub extern fn gtk_window_set_title(window: *GtkWindow, title: [*:0]const u8) void;
     pub extern fn gtk_window_set_default_size(window: *GtkWindow, width: c_int, height: c_int) void;
@@ -102,6 +111,11 @@ const gtk = struct {
     pub extern fn gtk_spin_button_set_value(spin_button: *GtkSpinButton, value: f64) void;
     pub extern fn gtk_spin_button_get_value(spin_button: *GtkSpinButton) f64;
     pub extern fn gtk_button_new_with_label(label: [*:0]const u8) *GtkWidget;
+    pub extern fn gtk_image_new_from_icon_name(icon_name: [*:0]const u8) *GtkWidget;
+    pub extern fn gtk_image_set_pixel_size(image: *GtkImage, pixel_size: c_int) void;
+    pub extern fn gtk_picture_new_for_paintable(paintable: *GdkPaintable) *GtkWidget;
+    pub extern fn gtk_picture_set_can_shrink(self: *GtkPicture, can_shrink: gboolean) void;
+    pub extern fn gtk_picture_set_keep_aspect_ratio(self: *GtkPicture, keep_aspect_ratio: gboolean) void;
     pub extern fn gtk_list_box_new() *GtkWidget;
     pub extern fn gtk_list_box_append(box: *GtkListBox, child: *GtkWidget) void;
     pub extern fn gtk_list_box_remove(box: *GtkListBox, child: *GtkWidget) void;
@@ -109,6 +123,7 @@ const gtk = struct {
     pub extern fn gtk_css_provider_load_from_string(css_provider: *GtkCssProvider, string: [*:0]const u8) void;
     pub extern fn gtk_style_context_add_provider_for_display(display: *GdkDisplay, provider: *GtkStyleProvider, priority: guint) void;
     pub extern fn gdk_display_get_default() ?*GdkDisplay;
+    pub extern fn gdk_texture_new_from_bytes(bytes: *GBytes, error_: ?*?*GError) ?*GdkTexture;
 
     pub extern fn cairo_set_source_rgb(cr: *cairo_t, red: f64, green: f64, blue: f64) void;
     pub extern fn cairo_paint(cr: *cairo_t) void;
@@ -127,6 +142,7 @@ const gtk = struct {
 };
 
 const WheelOrder = [_]u8{ 0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26 };
+const OgImageBytes = @embedFile("og-image");
 const HistoryLimit = 12;
 const BetLimit = 48;
 
@@ -149,6 +165,31 @@ const AppCss =
     \\.roulette-root {
     \\  background: #121514;
     \\  color: #f4efdf;
+    \\}
+    \\.menu-root {
+    \\  background: #101312;
+    \\  color: #f4efdf;
+    \\}
+    \\.menu-panel {
+    \\  background: #181c1a;
+    \\  border-radius: 8px;
+    \\  padding: 22px;
+    \\}
+    \\.menu-hero {
+    \\  border-radius: 8px;
+    \\}
+    \\.menu-title {
+    \\  color: #f7a41d;
+    \\  font-size: 36px;
+    \\  font-weight: 900;
+    \\}
+    \\.menu-subtitle {
+    \\  color: #f4efdf;
+    \\  font-size: 20px;
+    \\  font-weight: 700;
+    \\}
+    \\.menu-copy {
+    \\  color: #bbb5a5;
     \\}
     \\.roulette-sidebar {
     \\  background: #202322;
@@ -180,6 +221,14 @@ const AppCss =
     \\  background: #2f7df6;
     \\  color: #ffffff;
     \\  border-color: #2f7df6;
+    \\}
+    \\.menu-panel button.suggested-action {
+    \\  background: #f7a41d;
+    \\  color: #121514;
+    \\  border-color: #f7a41d;
+    \\}
+    \\.menu-panel button.suggested-action label {
+    \\  color: #121514;
     \\}
     \\.roulette-sidebar button.suggested-action label {
     \\  color: #ffffff;
@@ -244,6 +293,8 @@ const AppState = struct {
     history: std.array_list.Managed(HistoryEntry),
 
     window: ?*gtk.GtkWidget = null,
+    menu_content: ?*gtk.GtkWidget = null,
+    game_content: ?*gtk.GtkWidget = null,
     wheel_area: ?*gtk.GtkWidget = null,
     table_area: ?*gtk.GtkWidget = null,
     balance_label: ?*gtk.GtkWidget = null,
@@ -333,6 +384,15 @@ fn activate(app: *gtk.GtkApplication, data: ?*anyopaque) callconv(.c) void {
     const title = gtk.adw_window_title_new("Zig Roulette", "Roulette europeenne GTK4/libadwaita");
     gtk.adw_header_bar_set_title_widget(@ptrCast(header), title);
 
+    const menu = buildMenu(state, toolbar);
+    state.menu_content = menu;
+    gtk.adw_application_window_set_content(@ptrCast(window), menu);
+
+    refreshUi(state);
+    gtk.gtk_window_present(@ptrCast(window));
+}
+
+fn buildGame(state: *AppState, toolbar: *gtk.GtkWidget) *gtk.GtkWidget {
     const root = gtk.gtk_box_new(gtk.GTK_ORIENTATION_HORIZONTAL, 16);
     gtk.gtk_widget_add_css_class(root, "roulette-root");
     gtk.gtk_widget_set_margin_top(root, 16);
@@ -438,10 +498,78 @@ fn activate(app: *gtk.GtkApplication, data: ?*anyopaque) callconv(.c) void {
     gtk.gtk_box_append(@ptrCast(side), state.history_list.?);
 
     gtk.adw_toolbar_view_set_content(@ptrCast(toolbar), root);
-    gtk.adw_application_window_set_content(@ptrCast(window), toolbar);
+    return toolbar;
+}
 
-    refreshUi(state);
-    gtk.gtk_window_present(@ptrCast(window));
+fn buildMenu(state: *AppState, game_toolbar: *gtk.GtkWidget) *gtk.GtkWidget {
+    const root = gtk.gtk_box_new(gtk.GTK_ORIENTATION_VERTICAL, 0);
+    gtk.gtk_widget_add_css_class(root, "menu-root");
+    gtk.gtk_widget_set_hexpand(root, 1);
+    gtk.gtk_widget_set_vexpand(root, 1);
+    gtk.gtk_widget_set_margin_top(root, 32);
+    gtk.gtk_widget_set_margin_bottom(root, 32);
+    gtk.gtk_widget_set_margin_start(root, 32);
+    gtk.gtk_widget_set_margin_end(root, 32);
+
+    const panel = gtk.gtk_box_new(gtk.GTK_ORIENTATION_VERTICAL, 12);
+    gtk.gtk_widget_add_css_class(panel, "menu-panel");
+    gtk.gtk_widget_set_hexpand(panel, 1);
+    gtk.gtk_widget_set_vexpand(panel, 1);
+    gtk.gtk_box_append(@ptrCast(root), panel);
+
+    if (buildOgPicture()) |hero| {
+        gtk.gtk_widget_add_css_class(hero, "menu-hero");
+        gtk.gtk_widget_set_size_request(hero, 760, 376);
+        gtk.gtk_widget_set_halign(hero, gtk.GTK_ALIGN_CENTER);
+        gtk.gtk_widget_set_hexpand(hero, 1);
+        gtk.gtk_box_append(@ptrCast(panel), hero);
+    } else {
+        const icon = gtk.gtk_image_new_from_icon_name("dev.instazdll.ZigRoulette");
+        gtk.gtk_image_set_pixel_size(@ptrCast(icon), 128);
+        gtk.gtk_widget_set_halign(icon, gtk.GTK_ALIGN_CENTER);
+        gtk.gtk_box_append(@ptrCast(panel), icon);
+    }
+
+    const title = gtk.gtk_label_new("ZIG-ROULETTE");
+    gtk.gtk_widget_add_css_class(title, "menu-title");
+    gtk.gtk_label_set_xalign(@ptrCast(title), 0);
+    gtk.gtk_box_append(@ptrCast(panel), title);
+
+    const subtitle = gtk.gtk_label_new("The Casino of Code");
+    gtk.gtk_widget_add_css_class(subtitle, "menu-subtitle");
+    gtk.gtk_label_set_xalign(@ptrCast(subtitle), 0);
+    gtk.gtk_box_append(@ptrCast(panel), subtitle);
+
+    const copy = gtk.gtk_label_new("Winning is a matter of safety, not luck. Place your bets, spin the wheel, and keep the credits flowing in a native Zig GTK app.");
+    gtk.gtk_widget_add_css_class(copy, "menu-copy");
+    gtk.gtk_label_set_wrap(@ptrCast(copy), 1);
+    gtk.gtk_label_set_xalign(@ptrCast(copy), 0);
+    gtk.gtk_box_append(@ptrCast(panel), copy);
+
+    const actions = gtk.gtk_box_new(gtk.GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk.gtk_widget_set_margin_top(actions, 12);
+    gtk.gtk_box_append(@ptrCast(panel), actions);
+
+    const play_button = gtk.gtk_button_new_with_label("Entrer au casino");
+    gtk.gtk_widget_add_css_class(play_button, "suggested-action");
+    _ = gtk.g_signal_connect_data(play_button, "clicked", @ptrCast(&playClicked), state, null, 0);
+    gtk.gtk_box_append(@ptrCast(actions), play_button);
+
+    state.game_content = buildGame(state, game_toolbar);
+    return root;
+}
+
+fn buildOgPicture() ?*gtk.GtkWidget {
+    const bytes = gtk.g_bytes_new_static(OgImageBytes.ptr, OgImageBytes.len);
+    defer gtk.g_bytes_unref(bytes);
+
+    const texture = gtk.gdk_texture_new_from_bytes(bytes, null) orelse return null;
+    defer gtk.g_object_unref(@ptrCast(texture));
+
+    const picture = gtk.gtk_picture_new_for_paintable(@ptrCast(texture));
+    gtk.gtk_picture_set_keep_aspect_ratio(@ptrCast(picture), gtk.TRUE);
+    gtk.gtk_picture_set_can_shrink(@ptrCast(picture), gtk.TRUE);
+    return picture;
 }
 
 fn installCss() void {
@@ -462,6 +590,14 @@ fn addTitle(parent: *gtk.GtkWidget, text: [*:0]const u8) void {
 fn amountChanged(widget: *gtk.GtkSpinButton, data: ?*anyopaque) callconv(.c) void {
     const state: *AppState = @ptrCast(@alignCast(data.?));
     state.amount = @intFromFloat(gtk.gtk_spin_button_get_value(widget));
+    refreshUi(state);
+}
+
+fn playClicked(_: *gtk.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    const state: *AppState = @ptrCast(@alignCast(data.?));
+    const window = state.window orelse return;
+    const game_content = state.game_content orelse return;
+    gtk.adw_application_window_set_content(@ptrCast(window), game_content);
     refreshUi(state);
 }
 
