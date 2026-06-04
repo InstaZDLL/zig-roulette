@@ -54,7 +54,8 @@ Supported roulette bets:
 - Clickable betting table
 - Direct bet placement from table clicks
 - Session balance starting at `1000` credits
-- Active bet list and result history
+- Active bet list with structured rows
+- Color-coded result history
 - Last-bet undo button
 - Max amount button
 - Full new-session reset

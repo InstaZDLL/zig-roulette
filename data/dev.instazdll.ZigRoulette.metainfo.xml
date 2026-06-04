@@ -14,7 +14,8 @@
       It provides a European roulette table with clickable betting areas,
       animated spins, local session credits, and unit-tested payout rules.
       The interface includes quick max-bet controls, undo for the last active
-      bet, and a full new-session reset.
+      bet, a full new-session reset, structured active-bet rows, and
+      color-coded result history.
     </p>
   </description>
   <launchable type="desktop-id">dev.instazdll.ZigRoulette.desktop</launchable>

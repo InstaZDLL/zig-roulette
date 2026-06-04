@@ -15,6 +15,8 @@ const gtk = struct {
     pub const G_LOG_LEVEL_MASK: c_uint = 0x3f;
     pub const G_LOG_WRITER_UNHANDLED: c_int = 0;
     pub const G_LOG_WRITER_HANDLED: c_int = 1;
+    pub const GTK_ALIGN_START: c_int = 1;
+    pub const GTK_ALIGN_END: c_int = 2;
     pub const GTK_ORIENTATION_HORIZONTAL: c_int = 0;
     pub const GTK_ORIENTATION_VERTICAL: c_int = 1;
     pub const CAIRO_FONT_SLANT_NORMAL: c_int = 0;
@@ -81,6 +83,7 @@ const gtk = struct {
     pub extern fn gtk_widget_set_margin_end(widget: *GtkWidget, margin: c_int) void;
     pub extern fn gtk_widget_set_hexpand(widget: *GtkWidget, expand: gboolean) void;
     pub extern fn gtk_widget_set_vexpand(widget: *GtkWidget, expand: gboolean) void;
+    pub extern fn gtk_widget_set_halign(widget: *GtkWidget, alignment: c_int) void;
     pub extern fn gtk_widget_set_size_request(widget: *GtkWidget, width: c_int, height: c_int) void;
     pub extern fn gtk_widget_add_css_class(widget: *GtkWidget, css_class: [*:0]const u8) void;
     pub extern fn gtk_widget_set_sensitive(widget: *GtkWidget, sensitive: gboolean) void;
@@ -181,6 +184,29 @@ const AppCss =
     \\.roulette-sidebar button.suggested-action label {
     \\  color: #ffffff;
     \\}
+    \\.history-row,
+    \\.bet-row {
+    \\  padding: 6px;
+    \\  border-radius: 6px;
+    \\}
+    \\.history-row {
+    \\  background: #181c1a;
+    \\}
+    \\.bet-row {
+    \\  background: #151817;
+    \\}
+    \\.muted-label {
+    \\  color: #bbb5a5;
+    \\}
+    \\.profit-positive {
+    \\  color: #75d878;
+    \\}
+    \\.profit-negative {
+    \\  color: #ff7b72;
+    \\}
+    \\.profit-neutral {
+    \\  color: #d6c99b;
+    \\}
 ;
 
 const HitZone = struct {
@@ -189,6 +215,12 @@ const HitZone = struct {
     w: f64,
     h: f64,
     kind: game.BetKind,
+};
+
+const HistoryEntry = struct {
+    summary: [:0]u8,
+    details: [:0]u8,
+    profit: i64,
 };
 
 const AppState = struct {
@@ -209,8 +241,7 @@ const AppState = struct {
     ball_angle: f64 = 0,
     spinning: bool = false,
     hit_zones: std.array_list.Managed(HitZone),
-    history: std.array_list.Managed([:0]u8),
-    bet_labels: std.array_list.Managed([:0]u8),
+    history: std.array_list.Managed(HistoryEntry),
 
     window: ?*gtk.GtkWidget = null,
     wheel_area: ?*gtk.GtkWidget = null,
@@ -233,8 +264,7 @@ const AppState = struct {
             .game_state = game.GameState.init(allocator),
             .rng = std.Random.DefaultPrng.init(seed),
             .hit_zones = std.array_list.Managed(HitZone).init(allocator),
-            .history = std.array_list.Managed([:0]u8).init(allocator),
-            .bet_labels = std.array_list.Managed([:0]u8).init(allocator),
+            .history = std.array_list.Managed(HistoryEntry).init(allocator),
         };
         return state;
     }
@@ -242,15 +272,16 @@ const AppState = struct {
     pub fn deinit(self: *AppState) void {
         self.game_state.deinit();
         self.clearHistory();
-        for (self.bet_labels.items) |entry| self.allocator.free(entry);
         self.history.deinit();
-        self.bet_labels.deinit();
         self.hit_zones.deinit();
         self.allocator.destroy(self);
     }
 
     pub fn clearHistory(self: *AppState) void {
-        for (self.history.items) |entry| self.allocator.free(entry);
+        for (self.history.items) |entry| {
+            self.allocator.free(entry.summary);
+            self.allocator.free(entry.details);
+        }
         self.history.clearRetainingCapacity();
     }
 };
@@ -549,22 +580,36 @@ fn spinTick(data: ?*anyopaque) callconv(.c) gtk.gboolean {
 }
 
 fn appendHistory(state: *AppState, outcome: game.SpinOutcome, settled: game.SettleResult) !void {
-    var buf: [160]u8 = undefined;
+    var summary_buf: [64]u8 = undefined;
+    var details_buf: [128]u8 = undefined;
     const color = if (outcome.color) |col| col.label() else "Vert";
     const sign: []const u8 = if (settled.profit >= 0) "+" else "";
-    const line = try std.fmt.bufPrint(&buf, "{d} {s} | mise {d} | retour {d} | {s}{d}", .{
+    const summary = try std.fmt.bufPrint(&summary_buf, "{d} {s}", .{
         outcome.number,
         color,
+    });
+    const details = try std.fmt.bufPrint(&details_buf, "Mise {d} · Retour {d} · {s}{d}", .{
         settled.wagered,
         settled.returned,
         sign,
         settled.profit,
     });
-    const owned = try state.allocator.dupeZ(u8, line);
-    try state.history.insert(0, owned);
+    const summary_owned = try state.allocator.dupeZ(u8, summary);
+    errdefer state.allocator.free(summary_owned);
+    const details_owned = try state.allocator.dupeZ(u8, details);
+    errdefer state.allocator.free(details_owned);
+
+    const entry: HistoryEntry = .{
+        .summary = summary_owned,
+        .details = details_owned,
+        .profit = settled.profit,
+    };
+
+    try state.history.insert(0, entry);
     while (state.history.items.len > HistoryLimit) {
         const old = state.history.pop().?;
-        state.allocator.free(old);
+        state.allocator.free(old.summary);
+        state.allocator.free(old.details);
     }
 }
 
@@ -599,25 +644,16 @@ fn refreshUi(state: *AppState) void {
 fn rebuildBetList(state: *AppState) void {
     const list = state.bet_list orelse return;
     clearListBox(list);
-    for (state.bet_labels.items) |entry| state.allocator.free(entry);
-    state.bet_labels.clearRetainingCapacity();
 
     for (state.game_state.bets.items) |bet| {
-        var buf: [128]u8 = undefined;
-        const label_text = game.betLabel(&buf, bet);
-        const owned = state.allocator.dupeZ(u8, label_text) catch continue;
-        state.bet_labels.append(owned) catch {
-            state.allocator.free(owned);
-            continue;
-        };
-        appendRow(list, owned.ptr);
+        appendBetRow(list, bet);
     }
 }
 
 fn rebuildHistoryList(state: *AppState) void {
     const list = state.history_list orelse return;
     clearListBox(list);
-    for (state.history.items) |entry| appendRow(list, entry.ptr);
+    for (state.history.items) |entry| appendHistoryRow(list, entry);
 }
 
 fn clearListBox(list: *gtk.GtkWidget) void {
@@ -627,15 +663,59 @@ fn clearListBox(list: *gtk.GtkWidget) void {
     }
 }
 
-fn appendRow(list: *gtk.GtkWidget, text: [*:0]const u8) void {
-    const row = gtk.gtk_label_new(text);
-    gtk.gtk_label_set_xalign(@ptrCast(row), 0);
-    gtk.gtk_label_set_wrap(@ptrCast(row), 1);
-    gtk.gtk_widget_set_margin_top(row, 4);
-    gtk.gtk_widget_set_margin_bottom(row, 4);
-    gtk.gtk_widget_set_margin_start(row, 4);
-    gtk.gtk_widget_set_margin_end(row, 4);
+fn appendBetRow(list: *gtk.GtkWidget, bet: game.Bet) void {
+    const row = gtk.gtk_box_new(gtk.GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk.gtk_widget_add_css_class(row, "bet-row");
+    gtk.gtk_widget_set_margin_top(row, 3);
+    gtk.gtk_widget_set_margin_bottom(row, 3);
+    gtk.gtk_widget_set_margin_start(row, 3);
+    gtk.gtk_widget_set_margin_end(row, 3);
+
+    var kind_buf: [96]u8 = undefined;
+    const kind_text = kindLabelZ(&kind_buf, bet.kind);
+    const kind_label = gtk.gtk_label_new(kind_text.ptr);
+    gtk.gtk_label_set_xalign(@ptrCast(kind_label), 0);
+    gtk.gtk_widget_set_hexpand(kind_label, 1);
+    gtk.gtk_widget_set_halign(kind_label, gtk.GTK_ALIGN_START);
+    gtk.gtk_box_append(@ptrCast(row), kind_label);
+
+    var amount_buf: [32]u8 = undefined;
+    const amount_text = std.fmt.bufPrintZ(&amount_buf, "{d}", .{bet.amount}) catch "0";
+    const amount_label = gtk.gtk_label_new(amount_text.ptr);
+    gtk.gtk_widget_add_css_class(amount_label, "muted-label");
+    gtk.gtk_label_set_xalign(@ptrCast(amount_label), 1);
+    gtk.gtk_widget_set_halign(amount_label, gtk.GTK_ALIGN_END);
+    gtk.gtk_box_append(@ptrCast(row), amount_label);
+
     gtk.gtk_list_box_append(@ptrCast(list), row);
+}
+
+fn appendHistoryRow(list: *gtk.GtkWidget, entry: HistoryEntry) void {
+    const row = gtk.gtk_box_new(gtk.GTK_ORIENTATION_VERTICAL, 3);
+    gtk.gtk_widget_add_css_class(row, "history-row");
+    gtk.gtk_widget_set_margin_top(row, 3);
+    gtk.gtk_widget_set_margin_bottom(row, 3);
+    gtk.gtk_widget_set_margin_start(row, 3);
+    gtk.gtk_widget_set_margin_end(row, 3);
+
+    const summary = gtk.gtk_label_new(entry.summary.ptr);
+    gtk.gtk_label_set_xalign(@ptrCast(summary), 0);
+    gtk.gtk_widget_add_css_class(summary, profitCssClass(entry.profit));
+    gtk.gtk_box_append(@ptrCast(row), summary);
+
+    const details = gtk.gtk_label_new(entry.details.ptr);
+    gtk.gtk_label_set_xalign(@ptrCast(details), 0);
+    gtk.gtk_label_set_wrap(@ptrCast(details), 1);
+    gtk.gtk_widget_add_css_class(details, "muted-label");
+    gtk.gtk_box_append(@ptrCast(row), details);
+
+    gtk.gtk_list_box_append(@ptrCast(list), row);
+}
+
+fn profitCssClass(profit: i64) [*:0]const u8 {
+    if (profit > 0) return "profit-positive";
+    if (profit < 0) return "profit-negative";
+    return "profit-neutral";
 }
 
 fn setStatus(state: *AppState, text: [*:0]const u8) void {
