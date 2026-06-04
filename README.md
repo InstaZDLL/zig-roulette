@@ -32,6 +32,7 @@
 - [Project Structure](#project-structure)
 - [Commands](#commands)
 - [Testing](#testing)
+- [Static Analysis](#static-analysis)
 - [Desktop Metadata](#desktop-metadata)
 - [License](#license)
 
@@ -169,6 +170,7 @@ zig build        # Compile the application
 zig build run    # Run the GTK app
 zig build test   # Run unit tests for roulette logic
 zig fmt src/*.zig build.zig
+./scripts/opengrep.sh   # Static analysis (SAST)
 ```
 
 ## Testing
@@ -186,6 +188,27 @@ Run them with:
 
 ```bash
 zig build test
+```
+
+## Static Analysis
+
+Static analysis (SAST) runs with [Opengrep](https://opengrep.dev), locally and in CI
+(`.github/workflows/opengrep.yml`, which publishes results to GitHub Code Scanning).
+
+```bash
+./scripts/opengrep.sh           # human-readable scan
+./scripts/opengrep.sh --sarif   # also write opengrep.sarif
+```
+
+The scan combines the Opengrep registry (`--config auto`, no token required) with the
+project rules in `.opengrep/rules/`. Zig has no native Opengrep parser, so `.zig` files
+are checked with the language-agnostic `generic` engine; add your own rules to
+`.opengrep/rules/zig-generic.yml`.
+
+Install Opengrep with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
 ```
 
 ## Desktop Metadata

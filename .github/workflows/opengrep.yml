@@ -1,0 +1,52 @@
+name: Opengrep
+
+# Analyse statique (SAST) avec Opengrep — https://opengrep.dev
+# Les sources Zig ne sont pas parsées nativement : elles sont couvertes par le
+# moteur `generic` (règles dans .opengrep/rules), tandis que `--config auto`
+# couvre le reste du dépôt (YAML de CI, scripts shell, secrets, fichiers build…).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write # nécessaire pour publier le SARIF dans Code Scanning
+
+concurrency:
+  group: opengrep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Analyse statique
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Opengrep
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+          echo "$HOME/.opengrep/cli/latest" >> "$GITHUB_PATH"
+
+      - name: Valider les règles custom
+        run: opengrep validate .opengrep/rules
+
+      - name: Scanner le dépôt
+        run: |
+          opengrep scan \
+            --config auto \
+            --config .opengrep/rules \
+            --sarif --output opengrep.sarif
+        # Astuce : ajoutez `--error` ci-dessus pour faire échouer le job dès
+        # qu'une règle remonte un résultat (au lieu de simplement publier le
+        # rapport dans l'onglet Security du dépôt).
+
+      - name: Publier le rapport SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: opengrep.sarif
+          category: opengrep

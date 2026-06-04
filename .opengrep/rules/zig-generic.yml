@@ -1,0 +1,29 @@
+# Règles Opengrep « generic » pour les sources Zig.
+#
+# Zig n'est pas un langage analysé nativement par Opengrep : on utilise donc le
+# moteur `generic` (matching par tokens) sur les fichiers *.zig. Ces règles sont
+# préventives — elles ne matchent rien dans l'état actuel du code, mais évitent
+# que des foot-guns courants ne s'y glissent. Ajoutez ici vos règles projet.
+rules:
+  - id: zig-catch-unreachable
+    languages: [generic]
+    severity: WARNING
+    message: >-
+      `catch unreachable` provoque un panic (et un comportement indéfini en
+      ReleaseFast) si l'opération renvoie une erreur. Gérez l'erreur
+      explicitement avec `catch |err|` ou propagez-la avec `try`.
+    pattern: catch unreachable
+    paths:
+      include:
+        - "*.zig"
+
+  - id: zig-swallowed-error
+    languages: [generic]
+    severity: INFO
+    message: >-
+      Erreur silencieusement ignorée via `catch {}`. Vérifiez que c'est
+      intentionnel, sinon journalisez-la ou propagez-la.
+    pattern: catch {}
+    paths:
+      include:
+        - "*.zig"

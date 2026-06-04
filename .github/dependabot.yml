@@ -1,0 +1,17 @@
+# Mises à jour automatiques des dépendances — https://docs.github.com/code-security/dependabot
+#
+# Seules les GitHub Actions sont couvertes : le projet n'a pas de dépendances
+# Zig (build.zig.zon est vide) et les libs système (gtk4, libadwaita) relèvent
+# des paquets de l'OS. Si des dépendances Zig sont ajoutées plus tard, elles ne
+# sont pas supportées nativement par Dependabot.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
