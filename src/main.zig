@@ -241,12 +241,17 @@ const AppState = struct {
 
     pub fn deinit(self: *AppState) void {
         self.game_state.deinit();
-        for (self.history.items) |entry| self.allocator.free(entry);
+        self.clearHistory();
         for (self.bet_labels.items) |entry| self.allocator.free(entry);
         self.history.deinit();
         self.bet_labels.deinit();
         self.hit_zones.deinit();
         self.allocator.destroy(self);
+    }
+
+    pub fn clearHistory(self: *AppState) void {
+        for (self.history.items) |entry| self.allocator.free(entry);
+        self.history.clearRetainingCapacity();
     }
 };
 
@@ -358,6 +363,9 @@ fn activate(app: *gtk.GtkApplication, data: ?*anyopaque) callconv(.c) void {
     _ = gtk.g_signal_connect_data(state.amount_spin.?, "value-changed", @ptrCast(&amountChanged), state, null, 0);
     gtk.gtk_box_append(@ptrCast(amount_row), amount_label);
     gtk.gtk_box_append(@ptrCast(amount_row), state.amount_spin.?);
+    const max_button = gtk.gtk_button_new_with_label("Max");
+    _ = gtk.g_signal_connect_data(max_button, "clicked", @ptrCast(&maxClicked), state, null, 0);
+    gtk.gtk_box_append(@ptrCast(amount_row), max_button);
     gtk.gtk_box_append(@ptrCast(side), amount_row);
 
     const add_button = gtk.gtk_button_new_with_label("Ajouter la mise");
@@ -377,9 +385,9 @@ fn activate(app: *gtk.GtkApplication, data: ?*anyopaque) callconv(.c) void {
     _ = gtk.g_signal_connect_data(undo_button, "clicked", @ptrCast(&undoClicked), state, null, 0);
     gtk.gtk_box_append(@ptrCast(side), undo_button);
 
-    const reset_button = gtk.gtk_button_new_with_label("Reinitialiser solde");
-    _ = gtk.g_signal_connect_data(reset_button, "clicked", @ptrCast(&resetClicked), state, null, 0);
-    gtk.gtk_box_append(@ptrCast(side), reset_button);
+    const new_session_button = gtk.gtk_button_new_with_label("Nouvelle session");
+    _ = gtk.g_signal_connect_data(new_session_button, "clicked", @ptrCast(&newSessionClicked), state, null, 0);
+    gtk.gtk_box_append(@ptrCast(side), new_session_button);
 
     state.status_label = gtk.gtk_label_new("Choisis un montant puis clique une zone du tapis pour ajouter la mise.");
     gtk.gtk_label_set_wrap(@ptrCast(state.status_label.?), 1);
@@ -426,6 +434,19 @@ fn amountChanged(widget: *gtk.GtkSpinButton, data: ?*anyopaque) callconv(.c) voi
     refreshUi(state);
 }
 
+fn maxClicked(_: *gtk.GtkButton, data: ?*anyopaque) callconv(.c) void {
+    const state: *AppState = @ptrCast(@alignCast(data.?));
+    if (state.spinning) return;
+
+    const max_amount = @max(state.game_state.available(), 1);
+    state.amount = max_amount;
+    if (state.amount_spin) |spin| {
+        gtk.gtk_spin_button_set_value(@ptrCast(spin), @floatFromInt(max_amount));
+    }
+    setStatus(state, "Montant regle sur le solde disponible.");
+    refreshUi(state);
+}
+
 fn addBetClicked(_: *gtk.GtkButton, data: ?*anyopaque) callconv(.c) void {
     const state: *AppState = @ptrCast(@alignCast(data.?));
     if (state.spinning) return;
@@ -458,14 +479,21 @@ fn undoClicked(_: *gtk.GtkButton, data: ?*anyopaque) callconv(.c) void {
     refreshUi(state);
 }
 
-fn resetClicked(_: *gtk.GtkButton, data: ?*anyopaque) callconv(.c) void {
+fn newSessionClicked(_: *gtk.GtkButton, data: ?*anyopaque) callconv(.c) void {
     const state: *AppState = @ptrCast(@alignCast(data.?));
     if (state.spinning) return;
 
     state.game_state.reset();
+    state.clearHistory();
+    state.amount = 25;
     state.selected = null;
     state.last_number = null;
-    setStatus(state, "Solde remis a zero, pret pour une nouvelle session.");
+    state.wheel_angle = 0;
+    state.ball_angle = 0;
+    if (state.amount_spin) |spin| {
+        gtk.gtk_spin_button_set_value(@ptrCast(spin), 25);
+    }
+    setStatus(state, "Nouvelle session demarree.");
     refreshUi(state);
 }
 

@@ -56,7 +56,8 @@ Supported roulette bets:
 - Session balance starting at `1000` credits
 - Active bet list and result history
 - Last-bet undo button
-- Reset balance button
+- Max amount button
+- Full new-session reset
 - Dark casino-style GTK theme
 - SVG logo, rendered PNG icon variants, Linux `.desktop` launcher, and AppStream metadata
 - Unit tests for core game rules
@@ -136,10 +137,11 @@ zig-roulette
 Gameplay flow:
 
 1. Choose a bet amount.
-2. Click a zone on the roulette table to add that bet.
-3. Add more bets, repeat the selected bet, or undo the last bet if needed.
-4. Press `Lancer`.
-5. Read the result, updated balance, and history in the right panel.
+2. Use `Max` if you want to bet the available balance.
+3. Click a zone on the roulette table to add that bet.
+4. Add more bets, repeat the selected bet, or undo the last bet if needed.
+5. Press `Lancer`.
+6. Read the result, updated balance, and history in the right panel.
 
 ## Project Structure
 
