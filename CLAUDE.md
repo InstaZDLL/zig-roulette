@@ -22,16 +22,22 @@ Requires Zig `0.16.0` and the GTK4 + libadwaita development packages (linked via
 
 ## Architecture
 
-The codebase is deliberately split into two modules so game rules are testable without a display server:
+The codebase is split into focused modules so game rules are testable without a display server and the GTK frontend stays readable. The import graph is a clean DAG: `main → ui → render → app → gtk`, with `wheel` and `game` as shared leaves.
 
 - **`src/game.zig`** — pure roulette logic, zero GTK dependencies. This is the **test root** declared in `build.zig`; all unit tests live here. Contains `GameState`, bet types (`BetKind` tagged union: straight/color/parity/range/dozen/column), payout math (`wins`, `payoutMultiplier`, `settle`), and validation. Keep this module GUI-free.
-- **`src/main.zig`** — GTK4/libadwaita/Cairo desktop frontend (~1000 lines). Drives `game.GameState` and renders the wheel + betting table.
+- **`src/gtk.zig`** — hand-written GTK4/libadwaita/Cairo/GLib `extern fn` bindings (no deps). Add new C symbols here.
+- **`src/wheel.zig`** — pure wheel geometry (`order`, `sliceAngle`, `angleForNumber`) and spin easing (`lerp`, `easeOutCubic`, `normalizeAngle`). No GTK/game deps.
+- **`src/app.zig`** — the shared `AppState` plus `HitZone`, `HistoryEntry`, and constants. Depends on `gtk` + `game`.
+- **`src/render.zig`** — Cairo draw funcs (`drawWheel`, `drawTable`) and the `ZoneColor` palette. Rebuilds `hit_zones` during `drawTable`.
+- **`src/ui.zig`** — GTK glue: widget construction (`buildMenu`/`buildGame`), signal callbacks, spin animation, list/label refresh (`refreshUi`).
+- **`src/main.zig`** — thin entry point: allocator, `AppState` init, GTK warning silencing, `activate`.
+- **`src/style.css`** — the app stylesheet, loaded via `@embedFile("style.css")` in `ui.zig` (no longer an inline Zig string).
 
 ### Money model (`GameState`)
 `balance` is the player's credits; `reserved` is the sum of staked-but-unsettled bets. `available() = balance - reserved`. `addBet` validates, checks against `available()`, and increments `reserved`. `settle(outcome)` computes returns, applies `balance += returned - wagered`, then clears bets and `reserved`. Winning returns include the stake (`amount * (multiplier + 1)`). Number `0` and any `> 36` lose all even-money/group bets.
 
-### GTK binding style (`main.zig`)
-GTK/Adwaita/Cairo/GLib are bound by **hand-written `extern fn` declarations inside the `gtk` struct namespace** (top of `main.zig`) — there is no `@cImport`. When you need a C function not yet bound, add its `extern fn` declaration there. C callbacks use `callconv(.c)`.
+### GTK binding style (`gtk.zig`)
+GTK/Adwaita/Cairo/GLib are bound by **hand-written `extern fn` declarations** in `src/gtk.zig` (imported as `const gtk = @import("gtk.zig")`) — there is no `@cImport`. When you need a C function not yet bound, add its `extern fn` declaration there. C callbacks use `callconv(.c)`.
 
 ### State passing
 A single heap-allocated `AppState` (created in `main`, freed via `defer`) holds the game state, RNG, animation fields, and every widget pointer. It is passed as the `user_data` (`?*anyopaque`) argument through GTK signal connections and cast back inside each callback. There is no other shared/global state.
