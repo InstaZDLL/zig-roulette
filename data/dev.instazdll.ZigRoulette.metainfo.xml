@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.instazdll.ZigRoulette</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>EUPL-1.2</project_license>
+  <name>Zig Roulette</name>
+  <summary>European roulette desktop game</summary>
+  <developer id="dev.instazdll">
+    <name>InstaZDLL</name>
+  </developer>
+  <description>
+    <p>
+      Zig Roulette is a native GTK4/libadwaita casino game built with Zig.
+      It provides a European roulette table with clickable betting areas,
+      animated spins, local session credits, and unit-tested payout rules.
+    </p>
+  </description>
+  <launchable type="desktop-id">dev.instazdll.ZigRoulette.desktop</launchable>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">mild</content_attribute>
+  </content_rating>
+  <categories>
+    <category>Game</category>
+  </categories>
+  <url type="homepage">https://github.com/InstaZDLL/zig-roulette</url>
+  <url type="bugtracker">https://github.com/InstaZDLL/zig-roulette/issues</url>
+  <releases>
+    <release version="0.1.0" date="2026-06-04">
+      <description>
+        <p>Initial playable release with GTK4/libadwaita UI, roulette rules, desktop metadata, and icon assets.</p>
+      </description>
+    </release>
+  </releases>
+</component>

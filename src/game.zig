@@ -18,6 +18,7 @@ pub const BetKind = union(enum) {
     straight: u8,
     color: Color,
     parity: Parity,
+    range: Range,
     dozen: Dozen,
     column: Column,
 
@@ -43,6 +44,18 @@ pub const BetKind = union(enum) {
                 .first => "1-12",
                 .second => "13-24",
                 .third => "25-36",
+            };
+        }
+    };
+
+    pub const Range = enum {
+        low,
+        high,
+
+        pub fn label(self: Range) []const u8 {
+            return switch (self) {
+                .low => "1-18",
+                .high => "19-36",
             };
         }
     };
@@ -169,7 +182,7 @@ pub fn colorForNumber(number: u8) ?Color {
 pub fn payoutMultiplier(kind: BetKind) i64 {
     return switch (kind) {
         .straight => 35,
-        .color, .parity => 1,
+        .color, .parity, .range => 1,
         .dozen, .column => 2,
     };
 }
@@ -184,6 +197,10 @@ pub fn wins(kind: BetKind, outcome: SpinOutcome) bool {
         .parity => |wanted| number != 0 and switch (wanted) {
             .even => number % 2 == 0,
             .odd => number % 2 == 1,
+        },
+        .range => |wanted| switch (wanted) {
+            .low => number >= 1 and number <= 18,
+            .high => number >= 19 and number <= 36,
         },
         .dozen => |wanted| switch (wanted) {
             .first => number >= 1 and number <= 12,
@@ -203,6 +220,7 @@ pub fn betLabel(buf: []u8, bet: Bet) []const u8 {
         .straight => |n| std.fmt.bufPrint(buf, "Plein {d}: {d}", .{ n, bet.amount }) catch "",
         .color => |color| std.fmt.bufPrint(buf, "{s}: {d}", .{ color.label(), bet.amount }) catch "",
         .parity => |parity| std.fmt.bufPrint(buf, "{s}: {d}", .{ parity.label(), bet.amount }) catch "",
+        .range => |range| std.fmt.bufPrint(buf, "{s}: {d}", .{ range.label(), bet.amount }) catch "",
         .dozen => |dozen| std.fmt.bufPrint(buf, "Douzaine {s}: {d}", .{ dozen.label(), bet.amount }) catch "",
         .column => |column| std.fmt.bufPrint(buf, "{s}: {d}", .{ column.label(), bet.amount }) catch "",
     };
@@ -231,6 +249,25 @@ test "zero loses color and parity bets" {
     try std.testing.expectEqual(@as(i64, 40), result.wagered);
     try std.testing.expectEqual(@as(i64, 0), result.returned);
     try std.testing.expectEqual(@as(i64, 960), state.balance);
+}
+
+test "low and high range bets pay 1 to 1 and lose on zero" {
+    var state = GameState.init(std.testing.allocator);
+    defer state.deinit();
+
+    try state.addBet(.{ .kind = .{ .range = .low }, .amount = 25 });
+    try state.addBet(.{ .kind = .{ .range = .high }, .amount = 25 });
+    const result = state.settle(outcomeForNumber(18));
+
+    try std.testing.expectEqual(@as(i64, 50), result.wagered);
+    try std.testing.expectEqual(@as(i64, 50), result.returned);
+    try std.testing.expectEqual(@as(i64, 1000), state.balance);
+
+    try state.addBet(.{ .kind = .{ .range = .low }, .amount = 10 });
+    const zero_result = state.settle(outcomeForNumber(0));
+    try std.testing.expectEqual(@as(i64, 10), zero_result.wagered);
+    try std.testing.expectEqual(@as(i64, 0), zero_result.returned);
+    try std.testing.expectEqual(@as(i64, 990), state.balance);
 }
 
 test "dozen and column wins settle together" {

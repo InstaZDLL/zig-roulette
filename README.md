@@ -44,6 +44,7 @@ Supported roulette bets:
 - Straight number: `0-36`
 - Color: red or black
 - Parity: even or odd
+- Range: `1-18`, `19-36`
 - Dozens: `1-12`, `13-24`, `25-36`
 - Columns: `COL 1`, `COL 2`, `COL 3`
 
@@ -57,7 +58,7 @@ Supported roulette bets:
 - Last-bet undo button
 - Reset balance button
 - Dark casino-style GTK theme
-- SVG logo, rendered PNG icon variants, and Linux `.desktop` launcher metadata
+- SVG logo, rendered PNG icon variants, Linux `.desktop` launcher, and AppStream metadata
 - Unit tests for core game rules
 
 ## Tech Stack
@@ -114,6 +115,7 @@ This installs:
 
 - `bin/zig-roulette`
 - `share/applications/dev.instazdll.ZigRoulette.desktop`
+- `share/metainfo/dev.instazdll.ZigRoulette.metainfo.xml`
 - `share/icons/hicolor/scalable/apps/dev.instazdll.ZigRoulette.svg`
 - `share/icons/hicolor/<size>x<size>/apps/dev.instazdll.ZigRoulette.png` for `16`, `32`, `48`, `64`, `128`, `256`, and `512`
 
@@ -147,7 +149,8 @@ Gameplay flow:
 │   ├── icons/
 │   └── logo.svg
 ├── data/
-│   └── dev.instazdll.ZigRoulette.desktop
+│   ├── dev.instazdll.ZigRoulette.desktop
+│   └── dev.instazdll.ZigRoulette.metainfo.xml
 ├── src/
 │   ├── game.zig
 │   └── main.zig
@@ -189,8 +192,9 @@ The project includes:
 - `assets/logo.svg`
 - `assets/icons/logo-*.png`
 - `data/dev.instazdll.ZigRoulette.desktop`
+- `data/dev.instazdll.ZigRoulette.metainfo.xml`
 
-The build installs the SVG and PNG icon variants using the app id `dev.instazdll.ZigRoulette`, so desktop menus can resolve the icon after installation.
+The build installs the desktop launcher, AppStream metadata, SVG icon, and PNG icon variants using the app id `dev.instazdll.ZigRoulette`, so desktop menus can resolve the application after installation.
 
 ## License
 

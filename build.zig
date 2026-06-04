@@ -27,6 +27,7 @@ pub fn build(b: *std.Build) void {
     b.installFile("assets/icons/logo-256.png", "share/icons/hicolor/256x256/apps/dev.instazdll.ZigRoulette.png");
     b.installFile("assets/icons/logo-512.png", "share/icons/hicolor/512x512/apps/dev.instazdll.ZigRoulette.png");
     b.installFile("data/dev.instazdll.ZigRoulette.desktop", "share/applications/dev.instazdll.ZigRoulette.desktop");
+    b.installFile("data/dev.instazdll.ZigRoulette.metainfo.xml", "share/metainfo/dev.instazdll.ZigRoulette.metainfo.xml");
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());

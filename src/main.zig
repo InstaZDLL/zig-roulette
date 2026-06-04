@@ -740,14 +740,16 @@ fn drawTable(_: *gtk.GtkDrawingArea, cr: *gtk.cairo_t, width: gtk.gint, height: 
     drawZone(state, cr, .{ .x = grid_x + cell_w * 8.0, .y = dozen_y, .w = cell_w * 4.0, .h = 38.0, .kind = .{ .dozen = .third } }, "25-36", .neutral);
 
     const outside_y = dozen_y + 46.0;
-    const outside_w = grid_w / 7.0;
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 0.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .parity = .even } }, "PAIR", .neutral);
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 1.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .color = .red } }, "ROUGE", .red);
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 2.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .color = .black } }, "NOIR", .black);
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 3.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .parity = .odd } }, "IMPAIR", .neutral);
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 4.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .column = .first } }, "COL 1", .neutral);
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 5.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .column = .second } }, "COL 2", .neutral);
-    drawZone(state, cr, .{ .x = grid_x + outside_w * 6.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .column = .third } }, "COL 3", .neutral);
+    const outside_w = grid_w / 9.0;
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 0.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .range = .low } }, "1-18", .neutral);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 1.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .parity = .even } }, "PAIR", .neutral);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 2.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .color = .red } }, "ROUGE", .red);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 3.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .color = .black } }, "NOIR", .black);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 4.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .parity = .odd } }, "IMPAIR", .neutral);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 5.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .range = .high } }, "19-36", .neutral);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 6.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .column = .first } }, "COL 1", .neutral);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 7.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .column = .second } }, "COL 2", .neutral);
+    drawZone(state, cr, .{ .x = grid_x + outside_w * 8.0, .y = outside_y, .w = outside_w, .h = 38.0, .kind = .{ .column = .third } }, "COL 3", .neutral);
 }
 
 const ZoneColor = enum { red, black, green, neutral };
@@ -838,6 +840,7 @@ fn kindLabelZ(buf: []u8, kind: game.BetKind) [:0]const u8 {
         .straight => |n| std.fmt.bufPrintZ(buf, "Numero plein {d}", .{n}) catch "",
         .color => |color| std.fmt.bufPrintZ(buf, "{s}", .{color.label()}) catch "",
         .parity => |parity| std.fmt.bufPrintZ(buf, "{s}", .{parity.label()}) catch "",
+        .range => |range| std.fmt.bufPrintZ(buf, "{s}", .{range.label()}) catch "",
         .dozen => |dozen| std.fmt.bufPrintZ(buf, "Douzaine {s}", .{dozen.label()}) catch "",
         .column => |column| std.fmt.bufPrintZ(buf, "{s}", .{column.label()}) catch "",
     };
