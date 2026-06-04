@@ -13,7 +13,7 @@
   <circle cx="125" cy="115" r="55" fill="#141414" stroke="#444444" stroke-width="6"/>
   <circle cx="125" cy="115" r="45" fill="none" stroke="#F7A41D" stroke-width="2" stroke-dasharray="4 4" opacity="0.7"/>
 
-  <polygon points="98,75 148,75 128,105 153,105 88,155 108,120 83,120" fill="#F7A41D" filter="url(#shadow)"/>
+  <polygon points="105,75 155,75 135,105 160,105 95,155 115,120 90,120" fill="#F7A41D" filter="url(#shadow)"/>
 
   <text x="125" y="255" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="26" fill="#F7A41D" text-anchor="middle" letter-spacing="1">ZIG-ROULETTE</text>
 </svg>
