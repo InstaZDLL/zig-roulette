@@ -1,6 +1,8 @@
 # Zig Roulette
 
-![Zig Roulette logo](assets/logo.svg)
+<p align="center">
+  <img src="assets/logo.svg" alt="Zig Roulette logo" width="220">
+</p>
 
 Zig Roulette is a native GTK4/libadwaita desktop roulette game written in Zig. It implements a European roulette table with a drawn wheel, clickable betting areas, session balance, active bets, result history, and unit-tested payout logic.
 
