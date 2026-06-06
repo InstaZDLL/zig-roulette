@@ -22,12 +22,13 @@ Requires Zig `0.16.0` and the GTK4 + libadwaita development packages (linked via
 
 ## Architecture
 
-The codebase is split into focused modules so game rules are testable without a display server and the GTK frontend stays readable. The import graph is a clean DAG: `main → ui → render → app → gtk`, with `wheel` and `game` as shared leaves.
+The codebase is split into focused modules so game rules are testable without a display server and the GTK frontend stays readable. The import graph is a clean DAG: `main → ui → render → app → gtk`, with `wheel`, `game`, and `audio` as shared leaves.
 
 - **`src/game.zig`** — pure roulette logic, zero GTK dependencies. This is the **test root** declared in `build.zig`; all unit tests live here. Contains `GameState`, bet types (`BetKind` tagged union: straight/color/parity/range/dozen/column), payout math (`wins`, `payoutMultiplier`, `settle`), and validation. Keep this module GUI-free.
 - **`src/gtk.zig`** — hand-written GTK4/libadwaita/Cairo/GLib `extern fn` bindings (no deps). Add new C symbols here.
 - **`src/wheel.zig`** — pure wheel geometry (`order`, `sliceAngle`, `angleForNumber`) and spin easing (`lerp`, `easeOutCubic`, `normalizeAngle`). No GTK/game deps.
-- **`src/app.zig`** — the shared `AppState` plus `HitZone`, `HistoryEntry`, and constants. Depends on `gtk` + `game`.
+- **`src/audio.zig`** — self-contained SFX engine. Loads `libpulse-simple` at runtime via `dlopen` (no link-time dep, no headers): if absent, sound silently disables. Synthesises 16-bit PCM buffers (`chip`/`spin`/`win`) once at init and plays them on detached threads. No GTK deps.
+- **`src/app.zig`** — the shared `AppState` (incl. the `Audio` instance) plus `HitZone`, `HistoryEntry`, and constants. Depends on `gtk` + `game` + `audio`.
 - **`src/render.zig`** — Cairo draw funcs (`drawWheel`, `drawTable`) and the `ZoneColor` palette. Rebuilds `hit_zones` during `drawTable`.
 - **`src/ui.zig`** — GTK glue: widget construction (`buildMenu`/`buildGame`), signal callbacks, spin animation, list/label refresh (`refreshUi`).
 - **`src/main.zig`** — thin entry point: allocator, `AppState` init, GTK warning silencing, `activate`.
@@ -47,6 +48,6 @@ A single heap-allocated `AppState` (created in `main`, freed via `defer`) holds 
 
 ### Conventions
 - UI strings are **French** (`Rouge`, `Noir`, `Pair`, `Lancer`, etc.); `label()` methods on the game enums provide these.
-- `main` uses `DebugAllocator` so leaks fail in debug builds; history entries are heap-allocated `[:0]` strings that must be freed (see `clearHistory`).
+- `main` uses `DebugAllocator` so leaks fail in debug builds. The `audio` engine pre-allocates its PCM buffers once and frees them in `Audio.deinit` (called first in `AppState.deinit`).
 - This codebase uses the newer `std.array_list.Managed` API (Zig 0.16).
 - GTK warnings are intentionally silenced via `g_log_set_handler` / `g_log_set_writer_func`.
