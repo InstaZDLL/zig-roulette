@@ -42,6 +42,9 @@ pub const Audio = struct {
     chip_pcm: []i16 = &.{},
     spin_pcm: []i16 = &.{},
     win_pcm: []i16 = &.{},
+    /// Number of detached worker threads currently reading the PCM buffers.
+    /// `deinit` waits for this to hit zero before freeing anything.
+    in_flight: std.atomic.Value(u32) = std.atomic.Value(u32).init(0),
 
     /// Try to wire up PulseAudio and pre-render the effect buffers. Any failure
     /// leaves `available = false`; callers can still call `play` (it no-ops).
@@ -87,6 +90,9 @@ pub const Audio = struct {
     }
 
     pub fn deinit(self: *Audio) void {
+        // Wait for any in-flight worker to stop touching the buffers/dynlib
+        // before we free them, so a detached thread can't use freed resources.
+        while (self.in_flight.load(.acquire) != 0) std.Thread.yield() catch {};
         self.allocator.free(self.chip_pcm);
         self.allocator.free(self.spin_pcm);
         self.allocator.free(self.win_pcm);
@@ -108,12 +114,19 @@ pub const Audio = struct {
             .spin => self.spin_pcm,
             .win => self.win_pcm,
         };
-        const thread = std.Thread.spawn(.{}, worker, .{ self, pcm }) catch return;
+        // Count this worker before spawning so deinit can never race ahead and
+        // free the buffers between the spawn and the worker starting.
+        _ = self.in_flight.fetchAdd(1, .acq_rel);
+        const thread = std.Thread.spawn(.{}, worker, .{ self, pcm }) catch {
+            _ = self.in_flight.fetchSub(1, .acq_rel);
+            return;
+        };
         thread.detach();
     }
 };
 
 fn worker(self: *Audio, pcm: []const i16) void {
+    defer _ = self.in_flight.fetchSub(1, .acq_rel);
     var err: c_int = 0;
     var ss = PaSampleSpec{ .format = PA_SAMPLE_S16LE, .rate = @intCast(SR), .channels = 1 };
     const stream = self.new_fn(null, "Zig-Roulette", PA_STREAM_PLAYBACK, null, "sfx", &ss, null, null, &err) orelse return;
