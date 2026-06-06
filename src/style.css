@@ -42,36 +42,42 @@ windowhandle label {
 .menu-copy {
   color: #bbb5a5;
 }
-.roulette-sidebar {
-  background: #202322;
-  color: #f4efdf;
-  border-radius: 8px;
-  padding: 12px;
+.play-area {
+  background: #2a3450;
+  padding: 16px;
 }
-.roulette-list {
-  background: #151817;
+.control-rail {
+  background: #14181c;
   color: #f4efdf;
-  border-radius: 6px;
+  padding: 14px;
 }
-.roulette-sidebar label {
+.control-rail label {
   color: #f4efdf;
 }
-.roulette-sidebar spinbutton,
-.roulette-sidebar spinbutton {
+.control-rail spinbutton {
   color: #211f1c;
 }
-.roulette-sidebar button {
+.control-rail button {
   background: #303532;
   color: #f4efdf;
   border-color: #565e58;
 }
-.roulette-sidebar button label {
+.control-rail button label {
   color: #f4efdf;
 }
-.roulette-sidebar button.suggested-action {
-  background: #2f7df6;
+.spin-button {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-weight: 800;
+}
+.control-rail button.suggested-action,
+.control-rail button.spin-button {
+  background: #19b377;
   color: #ffffff;
-  border-color: #2f7df6;
+  border-color: #19b377;
+}
+.control-rail button.suggested-action label {
+  color: #ffffff;
 }
 .menu-panel button.suggested-action {
   background: #f7a41d;
@@ -81,29 +87,33 @@ windowhandle label {
 .menu-panel button.suggested-action label {
   color: #121514;
 }
-.roulette-sidebar button.suggested-action label {
+.balance-pill {
+  background: #14181c;
+  color: #f4efdf;
+  border-radius: 14px;
+  padding: 6px 14px;
+  font-weight: 700;
+}
+.result-chip {
+  border-radius: 13px;
+  padding: 3px 9px;
+  font-weight: 800;
   color: #ffffff;
 }
-.history-row,
-.bet-row {
-  padding: 6px;
-  border-radius: 6px;
+.chip-red {
+  background: #cc1c2e;
 }
-.history-row {
-  background: #181c1a;
+.chip-black {
+  background: #2e394d;
 }
-.bet-row {
-  background: #151817;
+.chip-green {
+  background: #19a05a;
+}
+.play-area button.flat {
+  background: transparent;
+  border: none;
+  color: #d6dcea;
 }
 .muted-label {
   color: #bbb5a5;
-}
-.profit-positive {
-  color: #75d878;
-}
-.profit-negative {
-  color: #ff7b72;
-}
-.profit-neutral {
-  color: #d6c99b;
 }

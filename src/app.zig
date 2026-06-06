@@ -8,6 +8,7 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 const game = @import("game.zig");
+const audio = @import("audio.zig");
 
 /// Maximum number of spins kept in the history side panel.
 pub const HistoryLimit = 12;
@@ -22,11 +23,10 @@ pub const HitZone = struct {
     kind: game.BetKind,
 };
 
-/// One settled spin shown in the history panel. The strings are heap-allocated
-/// and owned by `AppState` (freed in `clearHistory`).
+/// One settled spin shown as a coloured chip in the history strip. Kept as plain
+/// values (no heap allocation): the colour is derived from `number`.
 pub const HistoryEntry = struct {
-    summary: [:0]u8,
-    details: [:0]u8,
+    number: u8,
     profit: i64,
 };
 
@@ -34,6 +34,7 @@ pub const AppState = struct {
     allocator: std.mem.Allocator,
     game_state: game.GameState,
     rng: std.Random.DefaultPrng,
+    audio: audio.Audio,
     amount: i64 = 25,
     selected: ?game.BetKind = null,
     last_number: ?u8 = null,
@@ -56,10 +57,7 @@ pub const AppState = struct {
     wheel_area: ?*gtk.GtkWidget = null,
     table_area: ?*gtk.GtkWidget = null,
     balance_label: ?*gtk.GtkWidget = null,
-    result_label: ?*gtk.GtkWidget = null,
-    selected_label: ?*gtk.GtkWidget = null,
-    bet_list: ?*gtk.GtkWidget = null,
-    history_list: ?*gtk.GtkWidget = null,
+    history_strip: ?*gtk.GtkWidget = null,
     status_label: ?*gtk.GtkWidget = null,
     amount_spin: ?*gtk.GtkWidget = null,
     spin_button: ?*gtk.GtkWidget = null,
@@ -72,6 +70,7 @@ pub const AppState = struct {
             .allocator = allocator,
             .game_state = game.GameState.init(allocator),
             .rng = std.Random.DefaultPrng.init(seed),
+            .audio = audio.Audio.init(allocator),
             .hit_zones = std.array_list.Managed(HitZone).init(allocator),
             .history = std.array_list.Managed(HistoryEntry).init(allocator),
         };
@@ -79,6 +78,7 @@ pub const AppState = struct {
     }
 
     pub fn deinit(self: *AppState) void {
+        self.audio.deinit();
         self.game_state.deinit();
         self.clearHistory();
         self.history.deinit();
@@ -87,10 +87,6 @@ pub const AppState = struct {
     }
 
     pub fn clearHistory(self: *AppState) void {
-        for (self.history.items) |entry| {
-            self.allocator.free(entry.summary);
-            self.allocator.free(entry.details);
-        }
         self.history.clearRetainingCapacity();
     }
 };
