@@ -35,6 +35,10 @@ pub fn build(b: *std.Build) void {
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
     run_cmd.setEnvironmentVariable("GTK_THEME", "Adwaita");
+    // Force GTK4's software (cairo) renderer. Under WSLg the GL renderer tries
+    // Mesa Zink and floods stderr with libEGL/ZINK warnings (and can fail to
+    // draw); cairo sidesteps that.
+    run_cmd.setEnvironmentVariable("GSK_RENDERER", "cairo");
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
