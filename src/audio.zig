@@ -92,7 +92,8 @@ pub const Audio = struct {
     pub fn deinit(self: *Audio) void {
         // Wait for any in-flight worker to stop touching the buffers/dynlib
         // before we free them, so a detached thread can't use freed resources.
-        while (self.in_flight.load(.acquire) != 0) std.Thread.yield() catch {};
+        const poll = std.os.linux.timespec{ .sec = 0, .nsec = 1 * std.time.ns_per_ms };
+        while (self.in_flight.load(.acquire) != 0) _ = std.os.linux.nanosleep(&poll, null);
         self.allocator.free(self.chip_pcm);
         self.allocator.free(self.spin_pcm);
         self.allocator.free(self.win_pcm);
